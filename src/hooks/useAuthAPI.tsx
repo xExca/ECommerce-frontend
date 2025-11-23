@@ -1,5 +1,5 @@
 import type { CredentialResponse } from "@react-oauth/google";
-import axios from "axios";
+import axios from '@/api/axios';
 import { useAuth } from "@/context/AuthContext";
 
 const useAuthAPI = () => {
@@ -15,7 +15,7 @@ const useAuthAPI = () => {
         return;
       }
 
-      const res = await axios.post("http://localhost:8000/api/auth/google", {
+      const res = await axios.post("api/auth/google", {
         creds: response.credential,
         rememberMe,
       });
