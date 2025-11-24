@@ -15,19 +15,19 @@ const useAuthAPI = () => {
         return;
       }
 
-      const res = await axios.post("api/auth/google", {
+      const res = await axios.post("/api/auth/google", {
         creds: response.credential,
         rememberMe,
       });
 
-      if (!res.data?.user || !res.data?.token) {
+      if (!res.data?.user || !res.data?.accessToken) {
         console.log("Login failed");
         return;
       }
 
-      const { user, token } = res.data;
+      const { user, accessToken } = res.data;
 
-      login(user, token);
+      login(user, accessToken);
 
       window.location.href = "/dashboard";
     } catch (error) {

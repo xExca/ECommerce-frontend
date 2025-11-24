@@ -1,35 +1,76 @@
 import axios from "axios";
+import { getAccessToken,setAccessToken, triggerLogout } from "@/lib/helpers/authStore";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || "/",
+  withCredentials: true, 
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  config.headers = config.headers || {};
-
+  const token = getAccessToken();
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  const method = (config.method || "get").toLowerCase();
-
-  if (!config.headers["Content-Type"] && method !== "get") {
-    if (!(config.data instanceof FormData)) {
-      config.headers["Content-Type"] = "application/json";
-    }
-  }
-
-  config.params = {
-    ...config.params || {},
-    client: "web",
-  };
-
-
   return config;
-},
-(error) => {
-  return Promise.reject(error);
-})
+});
+
+const refreshClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/",
+  withCredentials: true,
+});
+
+let isRefreshing = false;
+let pendingRequests: Array<(token: string | null) => void> = [];
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          pendingRequests.push((newToken) => {
+            if (!newToken) {
+              return reject(error);
+            }
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(axiosInstance(originalRequest));
+          });
+        });
+      }
+
+      isRefreshing = true;
+
+      try {
+        const { data } = await refreshClient.post("/api/auth/refresh");
+
+        const newAccessToken = data.accessToken as string;
+        setAccessToken(newAccessToken);
+
+        pendingRequests.forEach((cb) => cb(newAccessToken));
+        pendingRequests = [];
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        setAccessToken(null);
+        pendingRequests.forEach((cb) => cb(null));
+        pendingRequests = [];
+
+        triggerLogout();
+
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default axiosInstance;
