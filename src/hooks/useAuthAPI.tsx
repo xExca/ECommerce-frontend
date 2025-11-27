@@ -1,33 +1,35 @@
 import type { CredentialResponse } from "@react-oauth/google";
-import axios from "axios";
+import axios from '@/api/axios';
 import { useAuth } from "@/context/AuthContext";
+import type { SuccessResponse } from "@greatsumini/react-facebook-login";
 
 const useAuthAPI = () => {
   const { login } = useAuth();
-  const handleLogin = () => {
-    return "The users is logged in";
+  const passwordless =  async(email: string) => {
+    const res = await axios.post("/api/auth/passwordless", {
+      identifier: email
+    });
   };
 
-  const handleGoogleLogin = async (response: CredentialResponse, rememberMe: boolean) => {
+  const handleGoogleLogin = async (response: CredentialResponse) => {
     try {
       if (!response.credential) {
         console.log("No credential from Google");
         return;
       }
 
-      const res = await axios.post("http://localhost:8000/api/auth/google", {
-        creds: response.credential,
-        rememberMe,
+      const res = await axios.post("/api/auth/google", {
+        creds: response.credential
       });
 
-      if (!res.data?.user || !res.data?.token) {
+      if (!res.data.user || !res.data.accessToken) {
         console.log("Login failed");
         return;
       }
 
-      const { user, token } = res.data;
+      const { user, accessToken } = res.data;
 
-      login(user, token);
+      login(user, accessToken);
 
       window.location.href = "/dashboard";
     } catch (error) {
@@ -35,9 +37,52 @@ const useAuthAPI = () => {
     }
   };
 
+  const handleFacebookLogin = async(response: SuccessResponse)=> {
+    try {
+      const accessToken = response.accessToken;
+      
+      if(!accessToken) {
+        console.log("No access token from Facebook");
+        return;
+      }
+
+      const res = await axios.post("/api/auth/facebook", {
+        accessToken
+      });
+
+      if(!res.data.user || !res.data.accessToken) {
+        console.log("Facebook Login failed");
+        return;
+      }
+
+      const { user, accessToken: token } = res.data;
+
+      login(user, token);
+
+      window.location.href = "/dashboard";
+
+    } catch (error) {
+      console.error("Facebook login error", error);
+    }
+
+  }
+
+  
+  const checkIfUserExists = async (email: string) => {
+    try {
+      const response = await axios.post("/api/auth/check-user", { email });
+      return !!response.data.exists;
+    } catch (error) {
+      console.error("Error checking user existence:", error);
+      return false;
+    }
+  };
+
   return {
     handleGoogleLogin,
-    handleLogin,
+    handleFacebookLogin,
+    passwordless,
+    checkIfUserExists
   };
 }
 
