@@ -1,6 +1,14 @@
 import axios from "axios";
 import { getAccessToken,setAccessToken, triggerLogout } from "@/lib/helpers/authStore";
 
+let isRefreshing = false;
+let pendingRequests: Array<(token: string | null) => void> = [];
+
+const refreshClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "/",
+  withCredentials: true,
+});
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/",
   withCredentials: true, 
@@ -14,14 +22,6 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
-
-const refreshClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/",
-  withCredentials: true,
-});
-
-let isRefreshing = false;
-let pendingRequests: Array<(token: string | null) => void> = [];
 
 axiosInstance.interceptors.response.use(
   (response) => response,
