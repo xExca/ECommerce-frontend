@@ -1,4 +1,4 @@
-import type { CredentialResponse } from "@react-oauth/google";
+import type { CredentialResponse, TokenResponse } from "@react-oauth/google";
 import axios from '@/api/axios';
 import { useAuth } from "@/context/AuthContext";
 import type { SuccessResponse } from "@greatsumini/react-facebook-login";
@@ -9,17 +9,29 @@ const useAuthAPI = () => {
     const res = await axios.post("/api/auth/passwordless", {
       identifier: email
     });
+
+    return res.data;
   };
 
-  const handleGoogleLogin = async (response: CredentialResponse) => {
+  const handleGoogleLogin = async (tokenResponse: TokenResponse) => {
     try {
-      if (!response.credential) {
-        console.log("No credential from Google");
+      if (!tokenResponse.access_token) {
+        console.log("No access token from Google");
         return;
       }
 
+      const userInfo = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        }
+      ).then((res) => res.json());
+
       const res = await axios.post("/api/auth/google", {
-        creds: response.credential
+        profile: userInfo,
+        token: tokenResponse.access_token,
       });
 
       if (!res.data.user || !res.data.accessToken) {

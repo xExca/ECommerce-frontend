@@ -2,22 +2,24 @@ import { FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
-import { useState } from "react"
+import React, { useState } from "react"
 import axios from "@/api/axios"
 import { useAuth } from "@/context/AuthContext";
+import type { SignUpPayload } from "@/types/AuthTypes"
 
 type VerifyCodeProps = {
-  email: string
-  setVerifyCode: React.Dispatch<React.SetStateAction<boolean>>
+  identifier?: string
+  payload?: SignUpPayload
+  setVerifyCode: React.Dispatch<React.SetStateAction<"form" | "otp">>
 }
 
-const VerifyCodeForm = ({email, setVerifyCode} : VerifyCodeProps) => {
+const VerifyCodeForm = ({identifier, setVerifyCode} : VerifyCodeProps) => {
   const [otp, setOtp] = useState<number | null>(null);
   const { login } = useAuth();
 
   const handleLogin = async() =>{
-    await axios.post('/api/auth/verify-otp', {
-      identifier: email,
+    await axios.post('/api/auth/login/verify-otp', {
+      identifier,
       code: otp
     }).then((res) => {
       if(res.status === 200) {
@@ -35,7 +37,7 @@ const VerifyCodeForm = ({email, setVerifyCode} : VerifyCodeProps) => {
     }).catch((error) => {
       if(error.response.data.message === 'Invalid or expired code.'){
         alert('Invalid or expired code.');
-        setVerifyCode(false);
+        setVerifyCode('form');
       }
     });
 
@@ -53,9 +55,7 @@ const VerifyCodeForm = ({email, setVerifyCode} : VerifyCodeProps) => {
 
         </FieldGroup>
       </FieldSet>
-      <Button variant="default" size="lg" onClick={()=> {
-handleLogin();
-      }}>
+      <Button variant="default" size="lg" onClick={()=> { handleLogin(); }}>
         Log In
       </Button>
 

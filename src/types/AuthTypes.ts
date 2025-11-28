@@ -5,3 +5,10 @@ export type AuthUser = {
   lastname: string;
   role: "user" | "admin";
 }
+
+export type SignUpPayload = {
+  firstname: string,
+  lastname: string,
+  email: string,
+  phone: string
+}

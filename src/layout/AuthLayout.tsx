@@ -21,7 +21,6 @@ const AuthLayout = () => {
         <div className="max-w-7xl mx-auto text-gray-600 px-6">
           <ul className="flex items-center justify-between py-4">
             <li className='font-bold'>E commerce Title</li>
-            <li >Sign up</li>
           </ul>
         </div>
       </nav>

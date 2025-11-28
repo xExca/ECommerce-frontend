@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-international-phone/style.css";
 
 @custom-variant dark (&:is(.dark *));
 

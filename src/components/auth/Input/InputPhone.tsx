@@ -1,0 +1,48 @@
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
+
+type PhoneFieldProps = {
+  value: string;
+  onChange: (phone: string) => void;
+};
+
+export default function InputPhone({ value, onChange }: PhoneFieldProps) {
+  return (
+    <PhoneInput
+      defaultCountry="ph"
+      value={value}
+      onChange={onChange}
+      placeholder="Enter your phone number"
+      
+      className="
+        w-full
+        border border-input rounded-md
+        bg-transparent
+        [--react-international-phone-height:44px]
+        [--react-international-phone-border-radius:0.375rem]
+        [--react-international-phone-border-color:rgb(226,232,240)]
+      "
+      inputClassName="
+        !w-full
+        !border-0
+        !bg-transparent
+        !text-base md:!text-sm
+        !px-3 !py-2
+        focus:!outline-none
+      "
+      countrySelectorStyleProps={{
+        className: "!border-0 !mr-0",
+        buttonClassName: `
+          !h-full
+          !border-0
+          !rounded-none
+          !bg-transparent
+          !px-3
+        `,
+        flagClassName: "!rounded-none",
+        dropdownArrowClassName: "!ml-1",
+      }}
+      
+    />
+  );
+}

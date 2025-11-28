@@ -1,7 +1,4 @@
 import { FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
-import FacebookLogin, { type SuccessResponse } from "@greatsumini/react-facebook-login";
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import Divider from "../ui/Divider"
@@ -9,22 +6,24 @@ import useAuthAPI  from "@/hooks/useAuthAPI"
 import { useState } from "react"
 import { Alert, AlertTitle } from "../ui/alert"
 import { BiError } from "react-icons/bi";
+import SocialLogin from "./SocialLogin";
+import IdentifierInput from "./Input/IdentifierInput"
 
 type LoginPropsType = {
-  email: string
-  setEmail: React.Dispatch<React.SetStateAction<string>>
-  setVerifyCode: React.Dispatch<React.SetStateAction<boolean>>
+  identifier: string
+  setIdentifier: React.Dispatch<React.SetStateAction<string>>
+  setVerifyCode: React.Dispatch<React.SetStateAction<"form" | "otp">>
 }
 
-const LoginForm = ({email, setEmail, setVerifyCode}: LoginPropsType) => {
-  const { handleGoogleLogin, handleFacebookLogin, passwordless, checkIfUserExists } = useAuthAPI();
+const LoginForm = ({identifier, setIdentifier, setVerifyCode}: LoginPropsType) => {
+  const { passwordless, checkIfUserExists } = useAuthAPI();
   const [error, setError] = useState<string | null>('');
   const [loading, setLoading] = useState<boolean>(false);
 
 
   const onSubmit = async () => {
     setError(null)
-    const trimmed = email.trim();
+    const trimmed = identifier.trim();
     
     if(!trimmed) {
       setError("Please enter a valid email or phone number");
@@ -43,7 +42,7 @@ const LoginForm = ({email, setEmail, setVerifyCode}: LoginPropsType) => {
       
       await passwordless(trimmed);
 
-      setVerifyCode(true);
+      setVerifyCode("otp");
     } catch (error) {
       console.error(error);
     } finally {
@@ -64,31 +63,19 @@ const LoginForm = ({email, setEmail, setVerifyCode}: LoginPropsType) => {
               </AlertTitle>
             </Alert>
           }
-          <FieldLabel htmlFor="email" className='font-bold'>
-            Email Address or Phone Number
-          </FieldLabel>
-          <Input type="text" id="email" className='py-5' placeholder="email@example.com or +63 912 345 6789" 
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <IdentifierInput value={identifier} onChange={setIdentifier} setIdentifier={setIdentifier}/>
         </FieldGroup>
       </FieldSet>
       <Button variant="default" size="lg" onClick={onSubmit} disabled={loading}>
         {loading ? "Loading..." : "Submit"}
       </Button>
       <Divider 
-        title='OR'
+        title='Other log in options'
       />
-      <div className="flex justify-center gap-1">
-        <GoogleLogin 
-          onSuccess={(credentialResponse: CredentialResponse) => handleGoogleLogin(credentialResponse)}
-          onError={() => console.log('Login Failed')}
-        />
-        <FacebookLogin 
-          appId={import.meta.env.VITE_FACEBOOK_APP_ID}
-          onSuccess={(response: SuccessResponse ) => handleFacebookLogin(response)}
-          onFail={(error) => console.log('Login Failed!', error)}
-        />
-        
+      <SocialLogin />
+
+      <div className="flex justify-center">
+        <span className="text-sm text-gray-500">Don't have an account? <a href="/signup" className="text-blue-500 hover:underline">Sign up</a></span>
       </div>
     </Card>
   )

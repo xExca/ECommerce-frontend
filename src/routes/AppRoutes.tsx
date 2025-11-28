@@ -10,6 +10,7 @@ import DashboardPage from "@/page/DashboardPage"
 
 //Components
 import { PrivateRoute } from "./PrivateRoutes"
+import SignUpPage from "@/page/SignUpPage"
 
 const AppRoutes = () => {
   return (
@@ -17,6 +18,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/login" replace />}></Route>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />}/>
+          <Route path="/signup" element={<SignUpPage />}/>
         </Route>
 
         <Route element={<PrivateRoute />}>
