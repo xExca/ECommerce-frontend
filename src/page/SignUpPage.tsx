@@ -1,10 +1,16 @@
-import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
 import VerifyCodeForm from "@/components/auth/VerifyCodeForm";
+import type { SignUpPayload } from "@/types/AuthTypes";
 import { useState } from "react";
 
-const LoginPage = () => {
+const SignUpPage = () => {
   const [step, setStep] = useState<"form" | "otp">("form");
-  const [identifier, setIdentifier] = useState('');
+  const [payload, setPayload]  = useState<SignUpPayload>({
+      firstname: '',
+      lastname: '',
+      email: '',
+      phone: ''
+    });
   return (
     <main className="flex-1 flex flex-col md:flex-row">
       {/* HERO / TEXT */}
@@ -20,14 +26,15 @@ const LoginPage = () => {
       {/* LOGIN PANEL */}
       <section className="w-full md:border-t-0 md:max-w-2xl lg:max-w-2xl md:flex md:items-center">
         <div className="w-full max-w-md mx-auto md:px-8 md:py-8">
-          {step === 'otp' ? 
-            <VerifyCodeForm identifier={identifier} setVerifyCode={setStep} from="login"/> :
-            <LoginForm identifier={identifier} setIdentifier={setIdentifier} setVerifyCode={setStep}/> 
-          }
+          {step === "otp" ? (
+            <VerifyCodeForm payload={payload} setVerifyCode={setStep} from="signup"/>
+          ) : (
+            <SignUpForm setStep={setStep} payload={payload} setPayload={setPayload} />
+          )}
         </div>
-      </section> 
+      </section>
     </main>
   );
-};
+}
 
-export default LoginPage;
+export default SignUpPage

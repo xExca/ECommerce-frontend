@@ -11,6 +11,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (user: AuthUser, token: string) => void;
   logout: () => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,12 +89,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateToken(jwtToken);
   };
 
+  const updateUser = (updates: Partial<AuthUser>) => {
+  setUser((prev) => {
+    if (!prev) return prev;
+
+    const updatedUser = {
+      ...prev,
+      ...updates,
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    return updatedUser;
+  });
+};
+
   const value: AuthContextType = {
     user,
     token,
     isLoading,
     login,
     logout: handleLogout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

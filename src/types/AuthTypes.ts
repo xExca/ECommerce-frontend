@@ -3,5 +3,17 @@ export type AuthUser = {
   email: string;
   firstname: string;
   lastname: string;
-  role: "user" | "admin";
+  phone: string;
+  picture: {
+    croppedUrl: string;
+    originalUrl: string;
+  };
+  role: "user" | "admin" | null;
+}
+
+export type SignUpPayload = {
+  firstname: string,
+  lastname: string,
+  email: string,
+  phone: string
 }
