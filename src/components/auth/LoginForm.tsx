@@ -1,11 +1,11 @@
-import { FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
+import { FieldGroup, FieldSet } from "@/components/ui/field"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import Divider from "../ui/Divider"
 import useAuthAPI  from "@/hooks/useAuthAPI"
 import { useState } from "react"
 import { Alert, AlertTitle } from "../ui/alert"
-import { BiError } from "react-icons/bi";
+import { Icon } from "@iconify/react";
 import SocialLogin from "./SocialLogin";
 import IdentifierInput from "./Input/IdentifierInput"
 
@@ -52,23 +52,39 @@ const LoginForm = ({identifier, setIdentifier, setVerifyCode}: LoginPropsType) =
 
   return (
     <Card className="p-6 w-full">
-      <FieldSet>
-        <span className="font-bold text-3xl">Log In</span>
-        <FieldGroup className="flex flex-col gap-2">
-          {error && 
-            <Alert variant={"error"}>
-              <BiError size={20} className="text-white"/>
-              <AlertTitle className="text-white">
-                {error}
-              </AlertTitle>
-            </Alert>
-          }
-          <IdentifierInput value={identifier} onChange={setIdentifier} setIdentifier={setIdentifier}/>
-        </FieldGroup>
-      </FieldSet>
-      <Button variant="default" size="lg" onClick={onSubmit} disabled={loading}>
-        {loading ? "Loading..." : "Submit"}
-      </Button>
+      <form onSubmit={onSubmit}>
+        <FieldSet>
+          <span className="font-bold text-3xl">Log In</span>
+
+          <FieldGroup className="flex flex-col gap-2">
+            {error && (
+              <Alert variant="error">
+                <Icon icon="si:error-duotone" width="24" height="24" />
+                <AlertTitle className="text-white">
+                  {error}
+                </AlertTitle>
+              </Alert>
+            )}
+
+            <IdentifierInput
+              value={identifier}
+              onChange={setIdentifier}
+              setIdentifier={setIdentifier}
+            />
+          </FieldGroup>
+        </FieldSet>
+
+        <Button
+          variant="default"
+          size="lg"
+          type="submit"
+          disabled={loading}
+          className="w-full mt-4"
+          onClick={onSubmit}
+        >
+          {loading ? "Loading..." : "Submit"}
+        </Button>
+      </form>
       <Divider 
         title='Other log in options'
       />

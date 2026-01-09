@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Card } from '../ui/card'
 import { FieldGroup, FieldSet } from '../ui/field'
 import { Alert, AlertTitle } from '../ui/alert'
-import { BiError } from 'react-icons/bi'
 import { Button } from '../ui/button'
 import Divider from '../ui/Divider'
 import SocialLogin from './SocialLogin'
@@ -10,7 +9,9 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import InputPhone from './Input/InputPhone'
 import axios from '@/api/axios'
+import { AxiosError } from 'axios'
 import type { SignUpPayload } from '@/types/AuthTypes'
+import { Icon } from '@iconify/react'
 
 type SignUpFormProps = {
   setStep: React.Dispatch<React.SetStateAction<"form" | "otp">>
@@ -22,7 +23,14 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
   const [error, setError] = useState<string | null>('');
   const [loading, setLoading] = useState<boolean>(false);
  
-
+  const validateEmail = (email: string) => {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!re.test(email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    return true;
+  }
   const onSubmit = async () => {
     if(payload.firstname === '') {
       setError('Please enter your first name');
@@ -32,11 +40,11 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
       setError('Please enter your last name');
       return;
     }
-    if(payload.email === '') {
-      setError('Please enter your email address');
+    if(!validateEmail(payload.email)) {
       return;
     }
-    if(payload.phone === '') {
+
+    if(payload.phone.length < 11) {
       setError('Please enter your phone number');
       return;
     }
@@ -51,7 +59,15 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
 
       setStep("otp");
     } catch (error) {
-      console.error(error);
+      if(error instanceof AxiosError) {
+        if(error.status === 400) {
+          setError(error.response?.data.message);
+        }
+      } else {
+        console.log(error);
+      }
+      
+
     } finally {
       setLoading(false);
     }
@@ -63,7 +79,7 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
         <FieldGroup className="flex flex-col gap-3">
           {error && 
             <Alert variant={"error"}>
-              <BiError size={20} className="text-white"/>
+              <Icon icon="si:error-fill" width="24" height="24"  style={{color: '#000'}} />
               <AlertTitle className="text-white">
                 {error}
               </AlertTitle>
@@ -75,6 +91,7 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
             placeholder="John"
             name='firstname'
             value={payload.firstname}
+            required
             onChange={(e) => setPayload({...payload, firstname: e.target.value})}
           />
           <Label htmlFor="email">Last Name</Label>
@@ -83,6 +100,7 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
             placeholder="Doe"
             name='lastname'
             value={payload.lastname}
+            required
             onChange={(e) => setPayload({...payload, lastname: e.target.value})}
           />
 
@@ -92,10 +110,11 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
             placeholder="email@example.com"
             name='email'
             value={payload.email}
+            required
             onChange={(e) => setPayload({...payload, email: e.target.value})}
           />
           <Label htmlFor="email">Phone</Label>
-          <InputPhone value={payload.phone} onChange={(phone) => payload.phone = phone}/>
+          <InputPhone value={payload.phone} onChange={(phone) => payload.phone = phone} required={true}/>
         </FieldGroup>
       </FieldSet>
       <Button variant="default" size="lg" onClick={onSubmit}>

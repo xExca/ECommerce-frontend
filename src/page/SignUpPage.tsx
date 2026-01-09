@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const SignUpPage = () => {
   const [step, setStep] = useState<"form" | "otp">("form");
-  const [ payload, setPayload ] = useState<SignUpPayload>({
+  const [payload, setPayload]  = useState<SignUpPayload>({
       firstname: '',
       lastname: '',
       email: '',
@@ -27,9 +27,9 @@ const SignUpPage = () => {
       <section className="w-full md:border-t-0 md:max-w-2xl lg:max-w-2xl md:flex md:items-center">
         <div className="w-full max-w-md mx-auto md:px-8 md:py-8">
           {step === "otp" ? (
-            <VerifyCodeForm identifier="" setVerifyCode={setStep} />
+            <VerifyCodeForm payload={payload} setVerifyCode={setStep} from="signup"/>
           ) : (
-            <SignUpForm setStep={setStep} payload={payload} setPayload={setPayload}/>
+            <SignUpForm setStep={setStep} payload={payload} setPayload={setPayload} />
           )}
         </div>
       </section>

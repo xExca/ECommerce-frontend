@@ -4,21 +4,23 @@ import "react-international-phone/style.css";
 type PhoneFieldProps = {
   value: string;
   onChange: (phone: string) => void;
+  required?: boolean;
 };
 
-export default function InputPhone({ value, onChange }: PhoneFieldProps) {
+export default function InputPhone({ value, onChange, required }: PhoneFieldProps) {
   return (
     <PhoneInput
       defaultCountry="ph"
       value={value}
       onChange={onChange}
       placeholder="Enter your phone number"
+      required={required}
       
       className="
         w-full
         border border-input rounded-md
         bg-transparent
-        [--react-international-phone-height:44px]
+        [--react-international-phone-height:45px]
         [--react-international-phone-border-radius:0.375rem]
         [--react-international-phone-border-color:rgb(226,232,240)]
       "

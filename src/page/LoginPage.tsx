@@ -21,7 +21,7 @@ const LoginPage = () => {
       <section className="w-full md:border-t-0 md:max-w-2xl lg:max-w-2xl md:flex md:items-center">
         <div className="w-full max-w-md mx-auto md:px-8 md:py-8">
           {step === 'otp' ? 
-            <VerifyCodeForm identifier={identifier} setVerifyCode={setStep}/> :
+            <VerifyCodeForm identifier={identifier} setVerifyCode={setStep} from="login"/> :
             <LoginForm identifier={identifier} setIdentifier={setIdentifier} setVerifyCode={setStep}/> 
           }
         </div>

@@ -1,4 +1,4 @@
-import type { CredentialResponse, TokenResponse } from "@react-oauth/google";
+import type { TokenResponse } from "@react-oauth/google";
 import axios from '@/api/axios';
 import { useAuth } from "@/context/AuthContext";
 import type { SuccessResponse } from "@greatsumini/react-facebook-login";
@@ -41,7 +41,16 @@ const useAuthAPI = () => {
 
       const { user, accessToken } = res.data;
 
-      login(user, accessToken);
+      login({
+        _id: user._id, 
+        email: user.email, 
+        firstname: user.firstname, 
+        lastname: user.lastname, 
+        role: user.role, 
+        phone: user.phone,
+        picture: user.picture
+      }, 
+        accessToken);
 
       window.location.href = "/dashboard";
     } catch (error) {
@@ -69,7 +78,16 @@ const useAuthAPI = () => {
 
       const { user, accessToken: token } = res.data;
 
-      login(user, token);
+      login({
+        _id: user._id, 
+        email: user.email, 
+        firstname: user.firstname, 
+        lastname: user.lastname, 
+        role: user.role, 
+        phone: user.phone,
+          picture: user.picture
+    }, 
+        token);
 
       window.location.href = "/dashboard";
 
