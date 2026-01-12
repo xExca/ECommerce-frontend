@@ -31,7 +31,7 @@ const IdentifierInput = ({
         <button
           type="button"
           onClick={handleToggle}
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-blue-500 hover:underline cursor-pointer"
         >
           {mode === "email" ? "Use Phone" : "Use Email"}
         </button>
