@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/card";
 import UserProfileHeader from "@/components/user/UserProfileHeader";
 import UserProfileInfo from "@/components/user/UserPersonalInfo";
-import type { AuthUser } from "@/types/AuthTypes";
+import { type AuthUser, type Providers } from "@/types/AuthTypes";
 import { capitalize } from "@/lib/utils";
 import axios from "@/api/axios";
+import UserInfoCard from "@/components/user/UserInfoCard";
 
 const UserPage = () => {
   const { user, token, login } = useAuth();
+  const [providers, setProviders] = useState<Providers | null>(null);
 
   const fullName = user ? `${capitalize(user.firstname)} ${capitalize(user.lastname)}` : "John Doe";
   const [payload, setPayload] = useState<AuthUser>({
@@ -20,6 +22,19 @@ const UserPage = () => {
     role: user?.role ?? null,
     picture: user?.picture ?? { croppedUrl: "", originalUrl: "" },
   });
+
+  const getConnectAccount = async () => {
+    try {
+      const { data } = await axios.get(`/api/users/linkedAccount/${user?._id}`);
+      setProviders(data ?? null);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    getConnectAccount();
+  }, []);
 
 
   const handleSubmit = async () => {
@@ -49,15 +64,18 @@ const UserPage = () => {
           userId={user?._id ?? ""}
         />
 
-        <UserProfileInfo
-          firstname={payload.firstname}
-          lastname={payload.lastname}
-          email={payload.email}
-          role={payload.role || ""}
-          phone={payload.phone}
-          setPayload={setPayload}
-          handleSubmit={handleSubmit}
-        />
+        <UserInfoCard title="Personal Information" description="You can change your personal information settings here.">
+          <UserProfileInfo
+            firstname={payload.firstname}
+            lastname={payload.lastname}
+            email={payload.email}
+            role={payload.role ?? "user"}
+            phone={payload.phone}
+            providers={providers ?? {}}
+            setPayload={setPayload}
+            handleSubmit={handleSubmit}
+          />
+        </UserInfoCard>
       </Card>
     </div>
   );

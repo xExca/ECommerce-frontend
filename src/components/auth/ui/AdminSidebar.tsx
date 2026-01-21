@@ -8,10 +8,18 @@ import { Icon } from "@iconify/react";
 import { useAuth } from "@/context/AuthContext";
 import SidebarItem from "./SidebarItem";
 import { capitalize, capitalizeFirst, formatNameLastCommaFirstInitial } from "@/lib/utils";
+import axios from "@/api/axios";
 
 const AdminSidebar = () => {
   const { user, logout } = useAuth();
-
+  const apiTest = async () => {
+    try {
+      const response = axios.post('/api/auth/facebook/link');
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <Sidebar
       className="border-r h-full shadow-lg p-0"      
@@ -35,7 +43,9 @@ const AdminSidebar = () => {
           activeIcon="mdi:user"
           label="User"
           groupName="user"
-        />
+        /> 
+        
+        <button onClick={apiTest}>TEST</button>
 
       </SidebarContent>
 
@@ -45,7 +55,7 @@ const AdminSidebar = () => {
             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
                 className="w-full h-full object-cover"
-                src="https://avatars.githubusercontent.com/u/430361?v=4"
+                src={user?.picture?.originalUrl || "https://placehold.co/100x100"}
                 alt={user ? `${user.firstname} ${user.lastname}` : "User avatar"}
               />
             </div>

@@ -26,7 +26,8 @@ type UserProfileHeaderProps = {
 
 export default function UserProfileHeader({ fullName, email, croppedUrl, originalUrl, userId }: UserProfileHeaderProps) {
   const { updateUser } = useAuth();
-  const [profileImage, setProfileImage] = useState(originalUrl);
+  const [profileImage, setProfileImage] = useState(originalUrl || "placehold.co/100x100");
+
   const [avatarVersion, setAvatarVersion] = useState("");
 
   const [editImage, setEditImage] = useState(profileImage);
@@ -86,9 +87,9 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
 
         if (response.status === 200) {
           const { zoom, crop, croppedAreaPixels } = response.data;
-          setCrop(crop);
-          setZoom(zoom);
-          setCroppedAreaPixels(croppedAreaPixels);
+          setCrop(crop ?? { x: 0, y: 0 });
+          setZoom(zoom ?? 1);
+          setCroppedAreaPixels(croppedAreaPixels ?? null);
         }
         
       } catch (error) {
@@ -120,7 +121,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
 
       if (response.status === 200) {
         const { originalUrl, croppedUrl, updatedAt } = response.data.picture;
-        console.log("Avatar updated:", originalUrl, croppedUrl);
+
         updateUser({
           picture: { 
             croppedUrl: croppedUrl,
@@ -150,7 +151,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
         {/* Profile Image */}
         <div className="absolute -bottom-16 left-8">
           <div className="relative w-[180px] h-[180px] rounded-full overflow-hidden border-4 border-white bg-white">
-            <img alt={fullName} src={`${imageUrl(croppedUrl)}?v=${avatarVersion}`} />
+            <img alt={fullName} src={croppedUrl === "" ? "https://placehold.co/100x100" : `${imageUrl(croppedUrl)}?v=${avatarVersion}`} className="w-full h-full object-cover"/>
           </div>
 
           <button
@@ -178,7 +179,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
             <div className="flex justify-center">
               <div className="relative w-80 h-80 bg-transparent">
                 <Cropper
-                  image={imageUrl(editImage)}
+                  image={editImage}
                   crop={crop}
                   zoom={zoom}
                   aspect={1}

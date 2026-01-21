@@ -8,7 +8,16 @@ export type AuthUser = {
     croppedUrl: string;
     originalUrl: string;
   };
+  providers?: Providers;
   role: "user" | "admin" | null;
+}
+
+export type Providers = Partial<
+  Record<"google" | "facebook", ProviderInfo>
+>;
+export type ProviderInfo = {
+  id: string;
+  email: string;
 }
 
 export type SignUpPayload = {

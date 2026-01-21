@@ -1,12 +1,12 @@
 import type { TokenResponse } from "@react-oauth/google";
-import axios from '@/api/axios';
 import { useAuth } from "@/context/AuthContext";
 import type { SuccessResponse } from "@greatsumini/react-facebook-login";
+import axios from "@/api/axios";
 
 const useAuthAPI = () => {
   const { login } = useAuth();
   const passwordless =  async(email: string) => {
-    const res = await axios.post("/api/auth/passwordless", {
+    const res = await axios.post("/api/auth/login", {
       identifier: email
     });
 
@@ -98,21 +98,20 @@ const useAuthAPI = () => {
   }
 
   
-  const checkIfUserExists = async (email: string) => {
-    try {
-      const response = await axios.post("/api/auth/check-user", { email });
-      return !!response.data.exists;
-    } catch (error) {
-      console.error("Error checking user existence:", error);
-      return false;
-    }
-  };
+  // const checkIfUserExists = async (email: string) => {
+  //   try {
+  //     const response = await axios.post("/api/auth/check-user", { email });
+  //     return !!response.data.exists;
+  //   } catch (error) {
+  //     console.error("Error checking user existence:", error);
+  //     return false;
+  //   }
+  // };
 
   return {
     handleGoogleLogin,
     handleFacebookLogin,
-    passwordless,
-    checkIfUserExists
+    passwordless
   };
 }
 

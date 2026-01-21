@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react"
 import axios from "@/api/axios"
 import { useAuth } from "@/context/AuthContext";
 import type { SignUpPayload } from "@/types/AuthTypes"
+import { Alert, AlertTitle } from "../ui/alert"
+import { Icon } from "@iconify/react"
 
 type VerifyCodeProps = {
   identifier?: string
@@ -16,10 +18,10 @@ type VerifyCodeProps = {
 }
 
 const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlow} : VerifyCodeProps) => {
-  const [ isResending, setIsResending ] = useState<boolean>(false);
   const [ cooldown, setCooldown ]= useState(0);
   const [otp, setOtp] = useState<number | null>(null);
   const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (cooldown <= 0) {
@@ -61,9 +63,11 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
     setCooldown(60);
     sessionStorage.setItem("otp_cooldown", "60");
     sessionStorage.setItem("otp_cooldown_ts", Date.now().toString());
+    
+    const email = from === "signup" && payload ? payload.email : identifier;
 
     try {
-      await axios.get(`/api/auth/resend-otp/${identifier}`);
+      await axios.get(`/api/auth/${from === "signup" ? "resend-otpSignup" : "resend-otp"}/${email}`);
     } catch (error) {
       console.error(error);
       setCooldown(0);
@@ -100,8 +104,11 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
         window.location.href = "/dashboard";
       }
     }).catch((error) => {
+      if(error.response.data.message === 'OTP code is invalid.'){
+        setError("The code you entered is invalid.");
+        return;
+      }
       if(error.response.data.message === 'Invalid or expired code.'){
-        alert('Invalid or expired code.');
         sessionStorage.removeItem("login_step");
         sessionStorage.removeItem("login_identifier");
         setVerifyCode('form');
@@ -150,6 +157,14 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
           <div className="text-2xl font-bold">Check your Email</div>
           <div className="text-sm text-gray-800">We've sent a code to your email address at <span className="text-red-500">{identifier}</span></div>
           <FieldGroup className="flex flex-col gap-2">
+            {error && (
+                <Alert variant="error">
+                  <Icon icon="si:error-duotone" width="24" height="24" />
+                  <AlertTitle className="text-white">
+                    {error}
+                  </AlertTitle>
+                </Alert>
+              )}
             <div className="flex items-center justify-between">
               <FieldLabel htmlFor="email" className='font-bold'>
                 Verify OTP Code

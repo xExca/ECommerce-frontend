@@ -8,6 +8,7 @@ import { Alert, AlertTitle } from "../ui/alert"
 import { Icon } from "@iconify/react";
 import SocialLogin from "./SocialLogin";
 import IdentifierInput from "./Input/IdentifierInput"
+import type { AxiosError } from "axios"
 
 type LoginPropsType = {
   identifier: string
@@ -16,7 +17,7 @@ type LoginPropsType = {
 }
 
 const LoginForm = ({identifier, setIdentifier, setVerifyCode}: LoginPropsType) => {
-  const { passwordless, checkIfUserExists } = useAuthAPI();
+  const { passwordless } = useAuthAPI();
   const [error, setError] = useState<string | null>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -33,18 +34,16 @@ const LoginForm = ({identifier, setIdentifier, setVerifyCode}: LoginPropsType) =
     try{
       setLoading(true);
       
-      const userExists = await checkIfUserExists(trimmed);
-
-      if(!userExists) {
-        setError("User does not exist");
-        return;
-      }
-      
       await passwordless(trimmed);
 
       setVerifyCode("otp");
-    } catch (error) {
-      console.error(error);
+    } catch (error: AxiosError | any) {
+      if(error.status == 404) {
+        if(error.response.data.message === 'User not found.') {
+          setError("User does not exist.");
+          return;
+        }
+      }
     } finally {
       setLoading(false);
     }
