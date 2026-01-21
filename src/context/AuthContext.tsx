@@ -2,8 +2,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "@/types/AuthTypes";
 import { decodeJwt } from "@/lib/helpers/jwt";
-import axios from "@/api/axios";
-import { registerLogout, setAccessToken } from "@/lib/helpers/authStore";
+import { AxiosError } from "axios";
+import { setAccessToken, registerLogout } from "@/lib/helpers/authStore";
+import axiosInstance from "@/api/axios";
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateToken = (newToken: string | null) => {
     setToken(newToken);
-    setAccessToken (newToken);
+    setAccessToken(newToken);
     if (newToken) {
       localStorage.setItem("token", newToken);
     } else {
@@ -31,23 +32,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const handleLogout = async () => {
+  const logout = async () => {
     try {
-      await axios.post("/api/auth/logout");
-    } catch{
-      console.error("Logout failed");
+      await axiosInstance.post("/api/auth/logout");
+    } catch (error: AxiosError | any) {
+      console.error("Logout failed", error.response?.data?.message);
     }
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
     setUser(null);
     updateToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
+
+  const updateUser = (updates: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const login = (userData: AuthUser, jwtToken: string) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+    updateToken(jwtToken);
   };
 
   useEffect(() => {
-    registerLogout(handleLogout);
-  }, []);
+    registerLogout(logout);
 
-  useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
@@ -62,19 +76,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
+      if (!document.cookie.includes("refreshToken")) {
+        setIsLoading(false); 
+        return;
+      }
+
       try {
-        const { data } = await axios.post(
-          "/api/auth/refresh" 
-        );
-
-        const newAccessToken = data.accessToken as string;
-        const refreshedUser = data.user as AuthUser;
-
-        setUser(refreshedUser);
-        localStorage.setItem("user", JSON.stringify(refreshedUser));
-        updateToken(newAccessToken);
-      } catch {
-        handleLogout();
+        const { data } = await axiosInstance.post("/auth/refresh");
+        if (data.accessToken && data.user) {
+          setUser(data.user as AuthUser);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          updateToken(data.accessToken as string);
+        }
+      } catch (error) {
+        logout();
       } finally {
         setIsLoading(false);
       }
@@ -83,32 +98,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     void initAuth();
   }, []);
 
-  const login = (userData: AuthUser, jwtToken: string) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-    updateToken(jwtToken);
-  };
-
-  const updateUser = (updates: Partial<AuthUser>) => {
-  setUser((prev) => {
-    if (!prev) return prev;
-
-    const updatedUser = {
-      ...prev,
-      ...updates,
-    };
-
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    return updatedUser;
-  });
-};
-
   const value: AuthContextType = {
     user,
     token,
     isLoading,
     login,
-    logout: handleLogout,
+    logout,
     updateUser,
   };
 
