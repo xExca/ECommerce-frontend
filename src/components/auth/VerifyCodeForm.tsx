@@ -67,7 +67,7 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
     const email = from === "signup" && payload ? payload.email : identifier;
 
     try {
-      await axios.get(`/api/auth/${from === "signup" ? "resend-otpSignup" : "resend-otp"}/${email}`);
+      await axios.get(`/api/auth/${from === "signup" ? "resend-otpSignup" : "resend"}/${email}`);
     } catch (error) {
       console.error(error);
       setCooldown(0);
