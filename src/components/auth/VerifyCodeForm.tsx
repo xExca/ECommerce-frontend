@@ -64,7 +64,7 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
     sessionStorage.setItem("otp_cooldown", "60");
     sessionStorage.setItem("otp_cooldown_ts", Date.now().toString());
     
-    const email = from === "signup" && payload ? payload.email : identifier;
+    const email = from === "signup" && payload ? payload.identifier : identifier;
 
     try {
       await axios.get(`/api/auth/${from === "signup" ? "resend-otpSignup" : "resend"}/${email}`);
@@ -183,7 +183,7 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
           </FieldGroup>
         </FieldSet>
         <Button variant="default" size="lg" className="w-full mt-6">
-          Log In
+          {from === "login" ? "Login" : "Sign Up"}
         </Button>
       </form>
 

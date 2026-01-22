@@ -23,6 +23,5 @@ export type ProviderInfo = {
 export type SignUpPayload = {
   firstname: string,
   lastname: string,
-  email: string,
-  phone: string
+  identifier: string,
 }

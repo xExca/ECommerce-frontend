@@ -8,9 +8,9 @@ const SignUpPage = () => {
   const [payload, setPayload]  = useState<SignUpPayload>({
     firstname: '',
     lastname: '',
-    email: '',
-    phone: ''
+    identifier: '',
   });
+  console.log(payload);
   
   return (
     <main className="flex-1 flex flex-col md:flex-row">

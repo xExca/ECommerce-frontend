@@ -22,7 +22,10 @@ type SignUpFormProps = {
 const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
   const [error, setError] = useState<string | null>('');
   const [loading, setLoading] = useState<boolean>(false);
- 
+  const [isEmailIdentifier, setIsEmailIdentifier] = useState<boolean>(false);
+  const handleChangeIdentifier = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPayload({...payload, identifier: e.target.value});
+  }
   const validateEmail = (email: string) => {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (!re.test(email)) {
@@ -40,12 +43,7 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
       setError('Please enter your last name');
       return;
     }
-    if(!validateEmail(payload.email)) {
-      return;
-    }
-
-    if(payload.phone.length < 11) {
-      setError('Please enter your phone number');
+    if(!validateEmail(payload.identifier)) {
       return;
     }
 
@@ -87,6 +85,7 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
           }
           <Label htmlFor="email">First Name</Label>
           <Input
+            className='py-5'
             type="text"
             placeholder="John"
             name='firstname'
@@ -96,6 +95,7 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
           />
           <Label htmlFor="email">Last Name</Label>
           <Input
+            className='py-5'
             type="text"
             placeholder="Doe"
             name='lastname'
@@ -104,17 +104,38 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
             onChange={(e) => setPayload({...payload, lastname: e.target.value})}
           />
 
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            type="email"
-            placeholder="email@example.com"
-            name='email'
-            value={payload.email}
-            required
-            onChange={(e) => setPayload({...payload, email: e.target.value})}
-          />
-          <Label htmlFor="email">Phone</Label>
-          <InputPhone value={payload.phone} onChange={(phone) => payload.phone = phone} required={true}/>
+         <div className='space-y-3'>
+            <div className='flex w-full justify-between'>
+              <Label htmlFor="email">{isEmailIdentifier ? "Email" : "Phone"}</Label>
+              <button
+                type="button"
+                onClick={()=> {
+                  setIsEmailIdentifier(!isEmailIdentifier)
+                  payload.identifier = '';
+                }}
+                className="text-xs text-blue-500 hover:underline cursor-pointer"
+              >
+                {isEmailIdentifier ? "Use Phone" : "Use Email"}
+              </button>
+            </div>
+            {isEmailIdentifier ? (
+              <>
+                <Input
+                  className='py-[21.5px] my-px'
+                  type="email"
+                  placeholder="email@example.com"
+                  name='email'
+                  value={payload.identifier}
+                  required
+                  onChange={handleChangeIdentifier}
+                />
+              </>
+            ) : (
+              <>
+                <InputPhone value={payload.identifier} onChange={(identifier) => payload.identifier = identifier} required={true}/>
+              </>
+            )}
+         </div>
         </FieldGroup>
       </FieldSet>
       <Button variant="default" size="lg" onClick={onSubmit}>
