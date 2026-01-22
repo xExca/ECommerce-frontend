@@ -53,8 +53,6 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
       
       const res = await axios.post('/api/auth/signup', payload);
 
-      console.log(res);
-
       setStep("otp");
     } catch (error) {
       if(error instanceof AxiosError) {
