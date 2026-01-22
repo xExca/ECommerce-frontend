@@ -10,7 +10,6 @@ const SignUpPage = () => {
     lastname: '',
     identifier: '',
   });
-  console.log(payload);
   
   return (
     <main className="flex-1 flex flex-col md:flex-row">

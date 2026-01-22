@@ -59,8 +59,8 @@ const UserPage = () => {
         <UserProfileHeader 
           fullName={fullName} 
           email={user?.email ?? ""} 
-          croppedUrl={user?.picture.croppedUrl ?? ""}
-          originalUrl={user?.picture.originalUrl ?? ""} 
+          croppedUrl={user?.picture?.croppedUrl ?? ""}
+          originalUrl={user?.picture?.originalUrl ?? ""} 
           userId={user?._id ?? ""}
         />
 

@@ -118,7 +118,7 @@ const VerifyCodeForm = ({identifier, payload, setVerifyCode, from, resetLoginFlo
   }
 
   const handleSignUp = async () => {
-    const res = await axios.post('/api/auth/signup/verify-otp', {
+    const res = await axios.post('/api/auth/signup/verify', {
       payload,
       code: otp
     })
