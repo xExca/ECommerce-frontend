@@ -17,7 +17,7 @@ const UserInfoCard = ({ title, description, children }: UserInfoCardProps) => {
             {description}
           </p>
         </div>
-        <div className="md:w-2/3 h-88 space-y-4 rounded-1xl border bg-slate-50/70 p-6 flex flex-col relative">
+        <div className="md:w-2/3 h-auto rounded-lg border bg-slate-50/70 flex flex-col relative shadow-xl p-6">
           {children}
         </div>
       </div>

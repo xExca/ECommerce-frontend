@@ -22,7 +22,7 @@ type SignUpFormProps = {
 const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
   const [error, setError] = useState<string | null>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [isEmailIdentifier, setIsEmailIdentifier] = useState<boolean>(false);
+  const [isEmailIdentifier, setIsEmailIdentifier] = useState<boolean>(true);
   const handleChangeIdentifier = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPayload({...payload, identifier: e.target.value});
   }

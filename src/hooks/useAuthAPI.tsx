@@ -10,7 +10,7 @@ const useAuthAPI = () => {
       identifier: email
     });
 
-    return res.data;
+    login(res.data.user, res.data.accessToken);
   };
 
   const handleGoogleLogin = async (tokenResponse: TokenResponse) => {

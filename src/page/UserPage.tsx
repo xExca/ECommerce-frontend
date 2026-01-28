@@ -8,24 +8,38 @@ import { capitalize } from "@/lib/utils";
 import axios from "@/api/axios";
 import UserInfoCard from "@/components/user/UserInfoCard";
 
+export  interface UserPayload {
+  email: string;
+  firstname: string;
+  lastname: string;
+  phone: string;
+  role: "user" | "admin" | null;
+}
+export interface ValidationError {
+  firstname: string;
+  lastname: string;
+  email: string;
+  phone: string;
+  role?: string;
+}
 const UserPage = () => {
   const { user, token, login } = useAuth();
   const [providers, setProviders] = useState<Providers | null>(null);
+  const [ errors, setErrors ] = useState<ValidationError | null>();
 
   const fullName = user ? `${capitalize(user.firstname)} ${capitalize(user.lastname)}` : "John Doe";
-  const [payload, setPayload] = useState<AuthUser>({
-    _id: user?._id ?? "",
+  const [payload, setPayload] = useState<UserPayload>({
     email: user?.email ?? "",
     firstname: user?.firstname ?? "",
     lastname: user?.lastname ?? "",
     phone: user?.phone ?? "",
     role: user?.role ?? null,
-    picture: user?.picture ?? { croppedUrl: "", originalUrl: "" },
   });
+  const currentRole = user?.role ?? "user";
 
   const getConnectAccount = async () => {
     try {
-      const { data } = await axios.get(`/api/users/linkedAccount/${user?._id}`);
+      const { data } = await axios.get(`/api/users/linked/${user?._id}`);
       setProviders(data ?? null);
     } catch (error) {
       console.error(error);
@@ -48,8 +62,11 @@ const UserPage = () => {
 
       setPayload(updatedUser);
 
-    } catch (error) {
+    } catch (error:any) {
       console.error(error);
+      if (error.response.data.validation === false) {
+        setErrors(error.response.data.errors);
+      }
     }
   };
 
@@ -66,13 +83,11 @@ const UserPage = () => {
 
         <UserInfoCard title="Personal Information" description="You can change your personal information settings here.">
           <UserProfileInfo
-            firstname={payload.firstname}
-            lastname={payload.lastname}
-            email={payload.email}
-            role={payload.role ?? "user"}
-            phone={payload.phone}
+            payload={payload}
+            currentRole={currentRole}
             providers={providers ?? {}}
             setPayload={setPayload}
+            errors={errors || null}
             handleSubmit={handleSubmit}
           />
         </UserInfoCard>

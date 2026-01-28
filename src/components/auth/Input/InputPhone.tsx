@@ -20,12 +20,15 @@ export default function InputPhone({ value, onChange, required }: PhoneFieldProp
         w-full
         border border-input rounded-md
         bg-transparent
+        px-1.5
+        h-10.5
         [--react-international-phone-height:45px]
-        [--react-international-phone-border-radius:0.375rem]
+        [--react-international-phone-border-radius:.50rem]
         [--react-international-phone-border-color:rgb(226,232,240)]
       "
       inputClassName="
         !w-full
+        !h-10
         !border-0
         !bg-transparent
         !text-base md:!text-sm
@@ -42,7 +45,7 @@ export default function InputPhone({ value, onChange, required }: PhoneFieldProp
           !px-3
         `,
         flagClassName: "!rounded-none",
-        dropdownArrowClassName: "!ml-1",
+        dropdownArrowClassName: "!ml-4",
       }}
       
     />

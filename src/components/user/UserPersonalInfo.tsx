@@ -4,26 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import InputPhone from "@/components/auth/Input/InputPhone";
 import { capitalize } from "@/lib/utils";
-import type { AuthUser, Providers } from "@/types/AuthTypes";
+import type { Providers } from "@/types/AuthTypes";
 import GoogleButton from "../auth/Button/GoogleButton";
 import FacebookLogin, { type SuccessResponse } from "@greatsumini/react-facebook-login";
 import FacebookButton from "../auth/Button/FacebookButton";
 import axios from "@/api/axios";
 import { useGoogleLogin } from "@react-oauth/google";
 import Swal from "sweetalert2";
+import type { UserPayload, ValidationError } from "@/page/UserPage";
 
 type UserProfileInfoProps = {
-  firstname: string;
-  lastname: string;
-  email: string;
-  role?: string;
-  phone: string;
+  payload: UserPayload;
+  currentRole: "user" | "admin" | null;
   providers? : Providers;
-  setPayload: React.Dispatch<React.SetStateAction<AuthUser>>
+  setPayload: React.Dispatch<React.SetStateAction<UserPayload>>
+  errors: ValidationError | null;
   handleSubmit: () => void
 };
 
-const UserProfileInfo = ({ firstname, lastname, email, role = "user", phone, providers, setPayload, handleSubmit}: UserProfileInfoProps) => {
+const UserProfileInfo = ({ payload, currentRole , providers, setPayload, errors, handleSubmit}: UserProfileInfoProps) => {
+  const { firstname, lastname, email, phone, role } = payload;
   const handleGoogleLink = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -90,70 +90,108 @@ const UserProfileInfo = ({ firstname, lastname, email, role = "user", phone, pro
   }
   return (
     <>
-      <form className="flex flex-col gap-4">
-      
-        <div className="flex gap-4">
-          <div className="flex flex-col w-full gap-2">
+      <form className="space-y-4 text-sm">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
             <Label>First name</Label>
-            <Input type="text" value={capitalize(firstname)} className="py-5.5" onChange={(e) => setPayload((prevState) => ({ ...prevState, firstname: e.target.value }))}/>
-          </div>
-
-          <div className="flex flex-col w-full gap-2">
-            <Label>Last name</Label>
-            <Input type="text" value={capitalize(lastname)} className="py-5.5" onChange={(e) => setPayload((prevState) => ({ ...prevState, lastname: e.target.value}))}/>
-          </div>
-        </div>
-
-        <div className="flex gap-4">
-          <div className="flex flex-col w-full gap-2">
-            <Label>Email</Label>
-            <Input type="text" value={email} className="py-5.5" onChange={(e) => setPayload((prevState) => ({ ...prevState, email: e.target.value}))} />
-          </div>
-
-          <div className="flex flex-col w-full gap-2">
-            <Label>Phone</Label>
-            <InputPhone value={phone} onChange={(e) => setPayload((prevState) => ({ ...prevState, phone: e }))} />
-          </div>
-        </div>
-        <div className="flex gap-4">
-          {role === "admin" &&
-            <div className="space-y-2">
-              <Label htmlFor="accountType">Account type</Label>
-              <select
-                id="accountType"
-                defaultValue={role}
-                className="border border-input bg-background rounded-md px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          }
-        </div>
-        <div className="flex gap-4">
-          <div className="flex flex-col w-full gap-2">
-            <GoogleButton onClick={handleGoogleLink} fromUser isLink={providers?.google !== undefined || null ? false : true} />
-          </div>
-
-          <div className="flex flex-col w-full gap-2">
-            <FacebookLogin
-              appId={import.meta.env.VITE_FACEBOOK_APP_ID}
-              onSuccess={(response: SuccessResponse ) => handleFacebookLink(response)}
-              onFail={(error) => console.log('Login Failed!', error)}
-              render={(renderProps) => (
-                <FacebookButton
-                  onClick={renderProps.onClick ?? (() => {})}
-                  fromUser
-                  isLink={providers?.facebook !== undefined || null ? false : true}
-                />
-              )}
+            <Input
+              className="h-10"
+              value={capitalize(firstname)}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, firstname: e.target.value }))
+              }
             />
+            {errors?.firstname && (
+              <span className="text-xs text-red-500">{errors.firstname}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Last name</Label>
+            <Input
+              className="h-10"
+              value={capitalize(lastname)}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, lastname: e.target.value }))
+              }
+            />
+            {errors?.lastname && (
+              <span className="text-xs text-red-500">{errors.lastname}</span>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <Label>Email</Label>
+            <Input
+              className="h-10"
+              value={email}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, email: e.target.value }))
+              }
+            />
+            {errors?.email && (
+              <span className="text-xs text-red-500">{errors.email}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Phone</Label>
+            <InputPhone
+              value={phone}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, phone: e }))
+              }
+            />
+            {errors?.phone && (
+              <span className="text-xs text-red-500">{errors.phone}</span>
+            )}
           </div>
         </div>
 
+        {currentRole === "admin" && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="accountType">Account type</Label>
+            <select
+              id="accountType"
+              value={role!}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, role: e.target.value as "user" | "admin" }))
+              }
+              className="h-10 border border-input bg-background rounded-md px-3 text-sm"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+            {errors?.role && (
+              <span className="text-xs text-red-500">{errors.role}</span>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 pt-2">
+          <GoogleButton
+            onClick={handleGoogleLink}
+            fromUser
+            isLink={!providers?.google}
+          />
+
+          <FacebookLogin
+            appId={import.meta.env.VITE_FACEBOOK_APP_ID}
+            onSuccess={handleFacebookLink}
+            onFail={(error) => console.log("Login Failed!", error)}
+            render={(renderProps) => (
+              <FacebookButton
+                onClick={renderProps.onClick ?? (() => {})}
+                fromUser
+                isLink={!providers?.facebook}
+              />
+            )}
+          />
+        </div>
       </form>
-      <div className="absolute bottom-4 right-4">
-        <Button type="submit" onClick={handleSubmit}>Save changes</Button>
+      <div className="flex justify-end pt-4">
+        <Button onClick={handleSubmit}>
+          Save changes
+        </Button>
       </div>
     </>
   );

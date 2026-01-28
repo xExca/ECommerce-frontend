@@ -4,7 +4,7 @@ export type AuthUser = {
   firstname: string;
   lastname: string;
   phone: string;
-  picture: {
+  picture?: {
     croppedUrl: string;
     originalUrl: string;
   };
