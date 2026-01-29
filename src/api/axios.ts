@@ -28,7 +28,7 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry && document.cookie.includes("refreshToken")) {
+    if (error.response?.status === 401 && error.response?.data?.message === "Authentication failed" && !originalRequest._retry) {
       originalRequest._retry = true;
 
       if (isRefreshing) {

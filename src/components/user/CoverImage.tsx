@@ -1,7 +1,11 @@
 import { Icon } from "@iconify/react"
 
+interface CoverImageProps {
+  avatar: string
+  fullName: string
+}
 
-const CoverImage = () => {
+const CoverImage = ({ avatar, fullName }: CoverImageProps) => {
   return (
      <div className="relative h-60">
         <img

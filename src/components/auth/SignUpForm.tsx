@@ -9,7 +9,7 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import InputPhone from './Input/InputPhone'
 import axios from '@/api/axios'
-import { AxiosError } from 'axios'
+import { AxiosError, type AxiosResponse } from 'axios'
 import type { SignUpPayload } from '@/types/AuthTypes'
 import { Icon } from '@iconify/react'
 
@@ -51,9 +51,10 @@ const SignUpForm = ({setStep, payload, setPayload}: SignUpFormProps) => {
       setError(null);
       setLoading(true);
       
-      const res = await axios.post('/api/auth/signup', payload);
-
-      setStep("otp");
+      const res:AxiosResponse = await axios.post('/api/auth/signup', payload);
+      if(res.data.message === 'Otp code has been sent to your email') {
+        setStep("otp");
+      }
     } catch (error) {
       if(error instanceof AxiosError) {
         if(error.status === 400) {
