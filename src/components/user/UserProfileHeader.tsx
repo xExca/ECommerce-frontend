@@ -115,7 +115,6 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
         formData.append("profilePicture", selectedFile);
       }
       formData.append("cropArea", JSON.stringify({ crop, zoom, croppedAreaPixels }));
-      formData.append("userId", userId);
 
       const response = await axios.post("/api/users/avatar", formData);
 
@@ -148,7 +147,6 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* Profile Image */}
         <div className="absolute -bottom-16 left-8">
           <div className="relative w-[180px] h-[180px] rounded-full overflow-hidden border-4 border-white bg-white">
             <img alt={fullName} src={croppedUrl === "" ? "https://placehold.co/100x100" : `${imageUrl(croppedUrl)}?v=${avatarVersion}`} className="w-full h-full object-cover"/>

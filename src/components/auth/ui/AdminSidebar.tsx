@@ -44,7 +44,7 @@ const AdminSidebar = () => {
             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
                 className="w-full h-full object-cover"
-                src={user?.picture?.originalUrl || "https://placehold.co/100x100"}
+                src={user?.picture?.croppedUrl || "https://placehold.co/100x100"}
                 alt={user ? `${user.firstname} ${user.lastname}` : "User avatar"}
               />
             </div>
