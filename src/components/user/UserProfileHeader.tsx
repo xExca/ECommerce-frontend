@@ -83,7 +83,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
       if (!userId) return;
 
       try {
-        const response = await axios.get(`/api/users/avatar-crop/${userId}`);
+        const response = await axios.get(`/api/users/avatar`);
 
         if (response.status === 200) {
           const { zoom, crop, croppedAreaPixels } = response.data;
@@ -119,18 +119,25 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
       const response = await axios.post("/api/users/avatar", formData);
 
       if (response.status === 200) {
-        const { originalUrl, croppedUrl, updatedAt } = response.data.picture;
+        if(response.data.message ==  "Avatar updated successfully") {
+          const { originalUrl, croppedUrl, updatedAt } = response.data.picture;
 
-        updateUser({
-          picture: { 
-            croppedUrl: croppedUrl,
-            originalUrl: originalUrl,
-          },
-        });
+          updateUser({
+            picture: { 
+              croppedUrl: croppedUrl,
+              originalUrl: originalUrl,
+            },
+          });
 
-        setProfileImage(originalUrl);
+          setAvatarVersion(updatedAt);
+          setProfileImage(originalUrl);
+        } else if (response.data.message == "Crop area updated successfully") {
+          const { message, updatedAt } = response.data;
+
+          console.log(message);
+          setAvatarVersion(updatedAt);
+        }
         setIsDialogOpen(false);
-        setAvatarVersion(updatedAt);
 
       }
     } catch (error) {
