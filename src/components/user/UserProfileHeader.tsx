@@ -26,7 +26,8 @@ type UserProfileHeaderProps = {
 
 export default function UserProfileHeader({ fullName, email, croppedUrl, originalUrl, userId }: UserProfileHeaderProps) {
   const { updateUser } = useAuth();
-  const [profileImage, setProfileImage] = useState(originalUrl);
+  const [profileImage, setProfileImage] = useState(originalUrl || "placehold.co/100x100");
+
   const [avatarVersion, setAvatarVersion] = useState("");
 
   const [editImage, setEditImage] = useState(profileImage);
@@ -37,19 +38,14 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  // console.log("croppedAreaPixels", croppedAreaPixels);
+  // console.log('crop', crop);
+  // console.log('zoom', zoom);
 
   const objectUrlRef = useRef<string | null>(null);
 
   const onCropComplete = (_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
-  };
-
-  const openDialog = () => {
-    setEditImage(profileImage);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setSelectedFile(null);
-    setIsDialogOpen(true);
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -82,13 +78,13 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
       if (!userId) return;
 
       try {
-        const response = await axios.get(`/api/users/avatar-crop/${userId}`);
+        const response = await axios.get(`/api/users/avatar`);
 
         if (response.status === 200) {
-          const { zoom, crop, croppedAreaPixels } = response.data;
-          setCrop(crop);
-          setZoom(zoom);
-          setCroppedAreaPixels(croppedAreaPixels);
+          const { zoom, crop, croppedAreaPixels } = response.data.avatarCrop;
+          setCrop(crop ?? { x: 0, y: 0 });
+          setZoom(zoom ?? 1);
+          setCroppedAreaPixels(croppedAreaPixels ?? null);
         }
         
       } catch (error) {
@@ -114,23 +110,29 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
         formData.append("profilePicture", selectedFile);
       }
       formData.append("cropArea", JSON.stringify({ crop, zoom, croppedAreaPixels }));
-      formData.append("userId", userId);
 
       const response = await axios.post("/api/users/avatar", formData);
 
       if (response.status === 200) {
-        const { originalUrl, croppedUrl, updatedAt } = response.data.picture;
-        console.log("Avatar updated:", originalUrl, croppedUrl);
-        updateUser({
-          picture: { 
-            croppedUrl: croppedUrl,
-            originalUrl: originalUrl,
-          },
-        });
+        if(response.data.message ==  "Avatar updated successfully") {
+          const { originalUrl, croppedUrl, updatedAt } = response.data.picture;
 
-        setProfileImage(originalUrl);
+          updateUser({
+            picture: { 
+              croppedUrl: croppedUrl,
+              originalUrl: originalUrl,
+            },
+          });
+
+          setAvatarVersion(updatedAt);
+          setProfileImage(originalUrl);
+        } else if (response.data.message == "Crop area updated successfully") {
+          const { message, updatedAt } = response.data;
+
+          console.log(message);
+          setAvatarVersion(updatedAt);
+        }
         setIsDialogOpen(false);
-        setAvatarVersion(updatedAt);
 
       }
     } catch (error) {
@@ -147,16 +149,15 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* Profile Image */}
         <div className="absolute -bottom-16 left-8">
           <div className="relative w-[180px] h-[180px] rounded-full overflow-hidden border-4 border-white bg-white">
-            <img alt={fullName} src={`${imageUrl(croppedUrl)}?v=${avatarVersion}`} />
+            <img alt={fullName} src={croppedUrl === "" ? "https://placehold.co/100x100" : `${imageUrl(croppedUrl)}?v=${avatarVersion}`} className="w-full h-full object-cover"/>
           </div>
 
           <button
             type="button"
             className="absolute bottom-0 left-[125px] h-10 w-10 rounded-full bg-white shadow border flex items-center justify-center"
-            onClick={openDialog}
+            onClick={() => setIsDialogOpen(true)}
           >
             <Icon icon="lucide:camera" className="w-6 h-6" />
           </button>
@@ -178,7 +179,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
             <div className="flex justify-center">
               <div className="relative w-80 h-80 bg-transparent">
                 <Cropper
-                  image={imageUrl(editImage)}
+                  image={editImage}
                   crop={crop}
                   zoom={zoom}
                   aspect={1}

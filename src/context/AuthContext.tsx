@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "@/types/AuthTypes";
-import { decodeJwt } from "@/lib/helpers/jwt";
-import axios from "@/api/axios";
-import { registerLogout, setAccessToken } from "@/lib/helpers/authStore";
+import { setAccessToken, registerLogout } from "@/lib/helpers/authStore";
+import axiosInstance from "@/api/axios";
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -23,7 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateToken = (newToken: string | null) => {
     setToken(newToken);
-    setAccessToken (newToken);
+    setAccessToken(newToken);
     if (newToken) {
       localStorage.setItem("token", newToken);
     } else {
@@ -31,57 +30,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const handleLogout = async () => {
+  const logout = async () => {
     try {
-      await axios.post("/api/auth/logout");
-    } catch{
+      await axiosInstance.post("/api/auth/logout");
+    } catch {
       console.error("Logout failed");
     }
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
     setUser(null);
     updateToken(null);
+    localStorage.removeItem("user");
   };
-
-  useEffect(() => {
-    registerLogout(handleLogout);
-  }, []);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
-
-      if (storedToken && storedUser) {
-        const payload = decodeJwt(storedToken);
-        if (payload?.exp && payload.exp * 1000 > Date.now()) {
-          setUser(JSON.parse(storedUser));
-          updateToken(storedToken);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      try {
-        const { data } = await axios.post(
-          "/api/auth/refresh" 
-        );
-
-        const newAccessToken = data.accessToken as string;
-        const refreshedUser = data.user as AuthUser;
-
-        setUser(refreshedUser);
-        localStorage.setItem("user", JSON.stringify(refreshedUser));
-        updateToken(newAccessToken);
-      } catch {
-        handleLogout();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void initAuth();
-  }, []);
 
   const login = (userData: AuthUser, jwtToken: string) => {
     setUser(userData);
@@ -90,35 +48,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUser = (updates: Partial<AuthUser>) => {
-  setUser((prev) => {
-    if (!prev) return prev;
-
-    const updatedUser = {
-      ...prev,
-      ...updates,
-    };
-
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    return updatedUser;
-  });
-};
-
-  const value: AuthContextType = {
-    user,
-    token,
-    isLoading,
-    login,
-    logout: handleLogout,
-    updateUser,
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  useEffect(() => {
+    registerLogout(logout);
+
+    const initAuth = () => {
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+
+      if (storedToken && storedUser) {
+        setUser(JSON.parse(storedUser));
+        updateToken(storedToken);
+      }
+
+      setIsLoading(false);
+    };
+
+    initAuth();
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{ user, token, isLoading, login, logout, updateUser }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };

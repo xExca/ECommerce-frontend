@@ -1,10 +1,33 @@
 import LoginForm from "@/components/auth/LoginForm";
 import VerifyCodeForm from "@/components/auth/VerifyCodeForm";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+type Step = "form" | "otp";
 const LoginPage = () => {
-  const [step, setStep] = useState<"form" | "otp">("form");
-  const [identifier, setIdentifier] = useState('');
+  const [step, setStep] = useState<Step>(() => {
+    return (sessionStorage.getItem("login_step") as Step) || "form";
+  });
+  const [identifier, setIdentifier] = useState<string>(()=>{
+    return sessionStorage.getItem("login_identifier") || "";
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("login_step", step);
+  }, [step]);
+
+  useEffect(() => {
+    if (identifier) {
+      sessionStorage.setItem("login_identifier", identifier);
+    }
+  }, [identifier]);
+
+  const resetLoginFlow = () => {
+    sessionStorage.removeItem("login_step");
+    sessionStorage.removeItem("login_identifier");
+    setStep("form");
+    setIdentifier("");
+  };
+  
   return (
     <main className="flex-1 flex flex-col md:flex-row">
       {/* HERO / TEXT */}
@@ -21,7 +44,7 @@ const LoginPage = () => {
       <section className="w-full md:border-t-0 md:max-w-2xl lg:max-w-2xl md:flex md:items-center">
         <div className="w-full max-w-md mx-auto md:px-8 md:py-8">
           {step === 'otp' ? 
-            <VerifyCodeForm identifier={identifier} setVerifyCode={setStep} from="login"/> :
+            <VerifyCodeForm identifier={identifier} setVerifyCode={setStep} from="login" resetLoginFlow={resetLoginFlow}/> :
             <LoginForm identifier={identifier} setIdentifier={setIdentifier} setVerifyCode={setStep}/> 
           }
         </div>

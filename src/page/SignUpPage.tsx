@@ -6,11 +6,11 @@ import { useState } from "react";
 const SignUpPage = () => {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [payload, setPayload]  = useState<SignUpPayload>({
-      firstname: '',
-      lastname: '',
-      email: '',
-      phone: ''
-    });
+    firstname: '',
+    lastname: '',
+    identifier: '',
+  });
+  
   return (
     <main className="flex-1 flex flex-col md:flex-row">
       {/* HERO / TEXT */}

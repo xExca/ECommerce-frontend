@@ -4,85 +4,196 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import InputPhone from "@/components/auth/Input/InputPhone";
 import { capitalize } from "@/lib/utils";
-import type { AuthUser } from "@/types/AuthTypes";
+import type { Providers } from "@/types/AuthTypes";
+import GoogleButton from "../auth/Button/GoogleButton";
+import FacebookLogin, { type SuccessResponse } from "@greatsumini/react-facebook-login";
+import FacebookButton from "../auth/Button/FacebookButton";
+import axios from "@/api/axios";
+import { useGoogleLogin } from "@react-oauth/google";
+import Swal from "sweetalert2";
+import type { UserPayload, ValidationError } from "@/page/UserPage";
 
 type UserProfileInfoProps = {
-  firstname: string;
-  lastname: string;
-  email: string;
-  role?: string;
-  phone: string;
-  setPayload: React.Dispatch<React.SetStateAction<AuthUser>>
+  payload: UserPayload;
+  currentRole: "user" | "admin" | null;
+  providers? : Providers;
+  setPayload: React.Dispatch<React.SetStateAction<UserPayload>>
+  errors: ValidationError | null;
   handleSubmit: () => void
 };
 
-const UserProfileInfo = ({ firstname, lastname, email, role = "user", phone, setPayload, handleSubmit}: UserProfileInfoProps) => {
+const UserProfileInfo = ({ payload, currentRole , providers, setPayload, errors, handleSubmit}: UserProfileInfoProps) => {
+  const { firstname, lastname, email, phone, role } = payload;
+  const handleGoogleLink = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        if (!tokenResponse.access_token) {
+          console.log("No access token from Google");
+          return;
+        }
+
+        const userInfo = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        ).then((res) => res.json());
+
+        const response = await axios.post("/api/auth/google/link", {
+          profile: userInfo,
+          token: tokenResponse.access_token,
+          email: email
+        });
+
+        if (response.data.status == 200) {
+          if (response.data.message === "Google account linked successfully.") {
+            Swal.fire({
+              icon: "success",
+              title: "Google account linked successfully.",
+              showConfirmButton: true
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Google link error:", error);
+      }
+    }
+  })
+
+  const handleFacebookLink = async (response: SuccessResponse) => {
+    try { 
+      const accessToken = response.accessToken;
+
+      if (!accessToken) {
+        console.log("No access token from Facebook");
+        return;
+      }
+
+      const res = await axios.post("/api/auth/facebook/link", {
+        accessToken,
+      });
+
+      if (res.data.status == 200) {
+        if (res.data.message === "Google account linked successfully.") {
+          Swal.fire({
+            icon: "success",
+            title: "Google account linked successfully.",
+            showConfirmButton: true
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Facebook link error:", error);
+    }
+  }
   return (
-    <div className="px-6 pb-6 pt-2 md:px-12 md:pb-8">
-      <div className="flex flex-col md:flex-row md:gap-10">
-        {/* Left text */}
-        <div className="md:w-1/3 mb-6 md:mb-0">
-          <h2 className="text-base font-semibold text-slate-900">
-            Personal Info
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            You can change your personal information settings here.
-          </p>
-        </div>
-
-        <div className="md:w-2/3 h-88 space-y-4 rounded-xl border bg-slate-50/70 p-6 flex flex-col relative">
-          <form className="flex flex-col gap-4">
-          
-            <div className="flex gap-4">
-              <div className="flex flex-col w-full gap-2">
-                <Label>First name</Label>
-                <Input type="text" value={firstname} className="py-5.5" onChange={(e) => setPayload((prevState) => ({ ...prevState, firstname: e.target.value }))}/>
-              </div>
-
-              <div className="flex flex-col w-full gap-2">
-                <Label>Last name</Label>
-                <Input type="text" value={lastname} className="py-5.5" onChange={(e) => setPayload((prevState) => ({ ...prevState, lastname: e.target.value}))}/>
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex flex-col w-full gap-2">
-                <Label>Email</Label>
-                <Input type="text" value={email} className="py-5.5" onChange={(e) => setPayload((prevState) => ({ ...prevState, email: e.target.value}))} />
-              </div>
-
-              <div className="flex flex-col w-full gap-2">
-                <Label>Phone</Label>
-                <InputPhone value={phone} onChange={(e) => setPayload((prevState) => ({ ...prevState, phone: e }))} />
-              </div>
-            </div>
-            <div className="flex gap-4">
-              {role === "admin" &&
-                <div className="space-y-2">
-                  <Label htmlFor="accountType">Account type</Label>
-                  <select
-                    id="accountType"
-                    defaultValue={role}
-                    className="border border-input bg-background rounded-md px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
+    <>
+      <form className="space-y-4 text-sm">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <Label>First name</Label>
+            <Input
+              className="h-10"
+              value={capitalize(firstname)}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, firstname: e.target.value }))
               }
-
-            </div>
-
-          </form>
-          <div className="absolute bottom-4 right-4">
-            <Button type="submit" onClick={handleSubmit}>Save changes</Button>
+            />
+            {errors?.firstname && (
+              <span className="text-xs text-red-500">{errors.firstname}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Last name</Label>
+            <Input
+              className="h-10"
+              value={capitalize(lastname)}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, lastname: e.target.value }))
+              }
+            />
+            {errors?.lastname && (
+              <span className="text-xs text-red-500">{errors.lastname}</span>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <Label>Email</Label>
+            <Input
+              className="h-10"
+              value={email}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, email: e.target.value }))
+              }
+            />
+            {errors?.email && (
+              <span className="text-xs text-red-500">{errors.email}</span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Phone</Label>
+            <InputPhone
+              value={phone}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, phone: e }))
+              }
+            />
+            {errors?.phone && (
+              <span className="text-xs text-red-500">{errors.phone}</span>
+            )}
           </div>
         </div>
 
+        {currentRole === "admin" && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="accountType">Account type</Label>
+            <select
+              id="accountType"
+              value={role!}
+              onChange={(e) =>
+                setPayload((prev) => ({ ...prev, role: e.target.value as "user" | "admin" }))
+              }
+              className="h-10 border border-input bg-background rounded-md px-3 text-sm"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+            {errors?.role && (
+              <span className="text-xs text-red-500">{errors.role}</span>
+            )}
+          </div>
+        )}
 
+        <div className="grid grid-cols-2 gap-4 pt-2">
+          <GoogleButton
+            onClick={handleGoogleLink}
+            fromUser
+            isLink={!providers?.google}
+          />
 
+          <FacebookLogin
+            appId={import.meta.env.VITE_FACEBOOK_APP_ID}
+            onSuccess={handleFacebookLink}
+            onFail={(error) => console.log("Login Failed!", error)}
+            render={(renderProps) => (
+              <FacebookButton
+                onClick={renderProps.onClick ?? (() => {})}
+                fromUser
+                isLink={!providers?.facebook}
+              />
+            )}
+          />
+        </div>
+      </form>
+      <div className="flex justify-end pt-4">
+        <Button onClick={handleSubmit}>
+          Save changes
+        </Button>
       </div>
-    </div>
+    </>
   );
 };
 
