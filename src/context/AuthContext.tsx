@@ -1,8 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "@/types/AuthTypes";
-import { decodeJwt } from "@/lib/helpers/jwt";
-import { AxiosError } from "axios";
 import { setAccessToken, registerLogout } from "@/lib/helpers/authStore";
 import axiosInstance from "@/api/axios";
 
@@ -35,13 +33,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await axiosInstance.post("/api/auth/logout");
-    } catch (error: AxiosError | any) {
-      console.error("Logout failed", error.response?.data?.message);
+    } catch {
+      console.error("Logout failed");
     }
     setUser(null);
     updateToken(null);
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
+  };
+
+  const login = (userData: AuthUser, jwtToken: string) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+    updateToken(jwtToken);
   };
 
   const updateUser = (updates: Partial<AuthUser>) => {
@@ -53,67 +56,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const login = (userData: AuthUser, jwtToken: string) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-    updateToken(jwtToken);
-  };
-
   useEffect(() => {
     registerLogout(logout);
 
-    const initAuth = async () => {
+    const initAuth = () => {
       const storedToken = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
 
       if (storedToken && storedUser) {
-        const payload = decodeJwt(storedToken);
-        if (payload?.exp && payload.exp * 1000 > Date.now()) {
-          setUser(JSON.parse(storedUser));
-          updateToken(storedToken);
-          setIsLoading(false);
-          return;
-        }
+        setUser(JSON.parse(storedUser));
+        updateToken(storedToken);
       }
 
-      if (!document.cookie.includes("refreshToken")) {
-        setIsLoading(false); 
-        return;
-      }
-
-      try {
-        const { data } = await axiosInstance.post("/auth/refresh");
-        if (data.accessToken && data.user) {
-          setUser(data.user as AuthUser);
-          localStorage.setItem("user", JSON.stringify(data.user));
-          updateToken(data.accessToken as string);
-        }
-      } catch (error) {
-        logout();
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     };
 
-    void initAuth();
+    initAuth();
   }, []);
 
-  const value: AuthContextType = {
-    user,
-    token,
-    isLoading,
-    login,
-    logout,
-    updateUser,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, token, isLoading, login, logout, updateUser }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 };

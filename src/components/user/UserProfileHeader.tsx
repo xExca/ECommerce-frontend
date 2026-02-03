@@ -38,19 +38,14 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  // console.log("croppedAreaPixels", croppedAreaPixels);
+  // console.log('crop', crop);
+  // console.log('zoom', zoom);
 
   const objectUrlRef = useRef<string | null>(null);
 
   const onCropComplete = (_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
-  };
-
-  const openDialog = () => {
-    setEditImage(profileImage);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setSelectedFile(null);
-    setIsDialogOpen(true);
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +81,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
         const response = await axios.get(`/api/users/avatar`);
 
         if (response.status === 200) {
-          const { zoom, crop, croppedAreaPixels } = response.data;
+          const { zoom, crop, croppedAreaPixels } = response.data.avatarCrop;
           setCrop(crop ?? { x: 0, y: 0 });
           setZoom(zoom ?? 1);
           setCroppedAreaPixels(croppedAreaPixels ?? null);
@@ -162,7 +157,7 @@ export default function UserProfileHeader({ fullName, email, croppedUrl, origina
           <button
             type="button"
             className="absolute bottom-0 left-[125px] h-10 w-10 rounded-full bg-white shadow border flex items-center justify-center"
-            onClick={openDialog}
+            onClick={() => setIsDialogOpen(true)}
           >
             <Icon icon="lucide:camera" className="w-6 h-6" />
           </button>
